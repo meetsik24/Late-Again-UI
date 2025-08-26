@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
           </div>
           
           <a
-            href="https://github.com/meetsik/excuse-generator"
+            href="https://github.com/meetsik24/Late-Again-API"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"

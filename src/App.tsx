@@ -16,7 +16,7 @@ function Navigation() {
             <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
               <Zap className="text-white" size={18} />
             </div>
-            <span className="font-bold text-xl text-gray-900">ExcuseAPI</span>
+            <span className="font-bold text-xl text-gray-900">Late Again API</span>
           </Link>
           
           <div className="flex items-center gap-1">

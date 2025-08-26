@@ -6,11 +6,16 @@ export interface ExcuseResponse {
   count: number;
 }
 
+export interface RandomExcuseResponse {
+  category: string;
+  excuse: string;
+}
+
 export interface CategoriesResponse {
   categories: string[];
 }
 
-export class ExcuseAPI {
+export class LateAgainAPIs {
   static async getCategories(): Promise<string[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`);
@@ -28,7 +33,8 @@ export class ExcuseAPI {
 
   static async getExcuses(category: string): Promise<string[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/excuses?category=${encodeURIComponent(category)}`);
+      const url = `${API_BASE_URL}/excuses?category=${encodeURIComponent(category)}`;
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -43,11 +49,12 @@ export class ExcuseAPI {
 
   static async getRandomExcuse(category: string): Promise<string | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/excuse?category=${encodeURIComponent(category)}`);
+      const url = `${API_BASE_URL}/excuse?category=${encodeURIComponent(category)}`;
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
+      const data: RandomExcuseResponse = await response.json();
       return data.excuse || null;
     } catch (error) {
       console.error(`Error fetching random excuse for category ${category}:`, error);

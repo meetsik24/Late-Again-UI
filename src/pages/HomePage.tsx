@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ExcuseAPI } from '../services/api';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { LateAgainAPIs } from '../services/api';
+import { Sparkles, ArrowRight, ChevronDown, Copy, Check } from 'lucide-react';
 
 interface Category {
   value: string;
@@ -13,14 +13,16 @@ const HomePage: React.FC = () => {
   const [currentExcuse, setCurrentExcuse] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categoryValues = await ExcuseAPI.getCategories();
+        const categoryValues = await LateAgainAPIs.getCategories();
         const categoryObjects = categoryValues.map(cat => ({
           value: cat,
-          label: ExcuseAPI.getCategoryLabel(cat)
+          label: LateAgainAPIs.getCategoryLabel(cat)
         }));
         setCategories(categoryObjects);
         if (categoryObjects.length > 0) {
@@ -28,7 +30,7 @@ const HomePage: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to load categories:', error);
-        // Fallback to default categories
+        // Fallback to default categories if API fails
         const fallbackCategories = [
           { value: 'late_for_work', label: 'Late for Work' },
           { value: 'not_sending_money', label: 'Not Sending Money' },
@@ -49,18 +51,26 @@ const HomePage: React.FC = () => {
     
     setIsGenerating(true);
     setCurrentExcuse('');
+    setCopied(false);
     
     try {
-      const excuse = await ExcuseAPI.getRandomExcuse(selectedCategory);
-      if (excuse) {
-        setCurrentExcuse(excuse);
+      // First try to get a random excuse
+      const randomExcuse = await LateAgainAPIs.getRandomExcuse(selectedCategory);
+      
+      if (randomExcuse) {
+        setCurrentExcuse(randomExcuse);
+        return;
+      }
+      
+      // If random excuse fails, get all excuses and pick one randomly
+      const allExcuses = await LateAgainAPIs.getExcuses(selectedCategory);
+      
+      if (allExcuses && allExcuses.length > 0) {
+        const randomIndex = Math.floor(Math.random() * allExcuses.length);
+        const selectedExcuse = allExcuses[randomIndex];
+        setCurrentExcuse(selectedExcuse);
       } else {
-        // Fallback: get all excuses and pick random one
-        const excuses = await ExcuseAPI.getExcuses(selectedCategory);
-        if (excuses.length > 0) {
-          const randomIndex = Math.floor(Math.random() * excuses.length);
-          setCurrentExcuse(excuses[randomIndex]);
-        }
+        setCurrentExcuse('Sorry, no excuses available for this category right now.');
       }
     } catch (error) {
       console.error('Failed to generate excuse:', error);
@@ -68,6 +78,21 @@ const HomePage: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(currentExcuse);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy text:', error);
+    }
+  };
+
+  const getSelectedCategoryLabel = () => {
+    const category = categories.find(cat => cat.value === selectedCategory);
+    return category ? category.label : 'Select a category';
   };
 
   if (isLoading) {
@@ -111,20 +136,37 @@ const HomePage: React.FC = () => {
                 Choose a category
               </label>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {categories.map((category) => (
-                  <button
-                    key={category.value}
-                    onClick={() => setSelectedCategory(category.value)}
-                    className={`p-4 rounded-xl text-sm font-medium transition-all ${
-                      selectedCategory === category.value
-                        ? 'bg-yellow-500 text-white shadow-md'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {category.label}
-                  </button>
-                ))}
+              {/* Custom Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-left flex items-center justify-between hover:bg-gray-100 transition-colors"
+                >
+                  <span className={selectedCategory ? 'text-gray-900' : 'text-gray-500'}>
+                    {getSelectedCategoryLabel()}
+                  </span>
+                  <ChevronDown 
+                    size={20} 
+                    className={`text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-60 overflow-y-auto">
+                    {categories.map((category) => (
+                      <button
+                        key={category.value}
+                        onClick={() => {
+                          setSelectedCategory(category.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full p-4 text-left hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                      >
+                        {category.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -151,10 +193,28 @@ const HomePage: React.FC = () => {
           {currentExcuse && (
             <div className="mt-8 p-8 bg-yellow-50 border border-yellow-200 rounded-2xl">
               <div className="text-center">
-                <div className="text-2xl mb-2">💬</div>
-                <p className="text-lg text-gray-800 leading-relaxed font-medium">
+                <div className="text-2xl mb-4">💬</div>
+                <p className="text-lg text-gray-800 leading-relaxed font-medium mb-4">
                   "{currentExcuse}"
                 </p>
+                
+                {/* Copy Button */}
+                <button
+                  onClick={copyToClipboard}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-yellow-300 text-yellow-700 rounded-lg font-medium hover:bg-yellow-50 transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      <Check size={16} className="text-green-600" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={16} />
+                      Copy Excuse
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}
@@ -172,7 +232,7 @@ const HomePage: React.FC = () => {
           
           <div className="text-center">
             <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">⚡</span>
+              <div className="text-2xl">⚡</div>
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Real-time API</h3>
             <p className="text-gray-600 text-sm">Powered by the Late Again API for fresh excuses</p>
