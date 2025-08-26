@@ -139,19 +139,7 @@ const DocsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Health Check */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
-              <h3 className="text-xl font-semibold text-gray-900">Health Check</h3>
-            </div>
-            
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
-              <code className="text-gray-800 font-mono">/health</code>
-            </div>
-            
-            <p className="text-gray-600 mb-4">Check if the API is running and healthy.</p>
-          </div>
+         
         </div>
 
         {/* Available Categories */}
