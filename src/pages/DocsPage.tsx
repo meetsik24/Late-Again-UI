@@ -207,24 +207,16 @@ const DocsPage: React.FC = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="https://late-again-api.onrender.com/docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
-            >
-              <ExternalLink size={18} />
-              View Full API Docs
-            </a>
+           
             
             <a
-              href="https://github.com/meetsik24/Late-Again-UI"
+              href="https://github.com/meetsik24/Late-Again-API"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
             >
               <Code size={18} />
-              View Source Code
+              Add Your Excuse to the Chaos
             </a>
           </div>
         </div>
