@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code, ExternalLink, Copy } from 'lucide-react';
+import { Code, ExternalLink, Copy, CheckCircle } from 'lucide-react';
 
 const DocsPage: React.FC = () => {
   const copyToClipboard = (text: string) => {
@@ -17,11 +17,12 @@ const DocsPage: React.FC = () => {
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Excuse API Documentation
+            Late Again API Documentation
           </h1>
           
           <p className="text-xl text-gray-600 leading-relaxed">
-            Integrate creative excuses into your applications with our simple REST API.
+            Integrate creative excuses into your applications with our simple REST API. 
+            Powered by the Late Again API service.
           </p>
         </div>
 
@@ -29,13 +30,24 @@ const DocsPage: React.FC = () => {
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Base URL</h2>
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center justify-between">
-            <code className="text-gray-800 font-mono">https://api.excusegenerator.com/v1</code>
+            <code className="text-gray-800 font-mono">https://late-again-api.onrender.com</code>
             <button 
-              onClick={() => copyToClipboard('https://api.excusegenerator.com/v1')}
+              onClick={() => copyToClipboard('https://late-again-api.onrender.com')}
               className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
             >
               <Copy size={16} />
             </button>
+          </div>
+        </div>
+
+        {/* API Status */}
+        <div className="mb-12 p-6 bg-green-50 border border-green-200 rounded-xl">
+          <div className="flex items-center gap-3">
+            <CheckCircle size={20} className="text-green-600" />
+            <div>
+              <h3 className="font-semibold text-green-800">API Status: Live</h3>
+              <p className="text-green-700 text-sm">The Late Again API is currently operational and serving requests.</p>
+            </div>
           </div>
         </div>
 
@@ -57,23 +69,20 @@ const DocsPage: React.FC = () => {
             <div className="bg-gray-900 rounded-xl p-4 overflow-x-auto">
               <pre className="text-green-400 text-sm">
 {`{
-  "success": true,
   "categories": [
-    {
-      "id": "late_for_work",
-      "name": "Late for Work",
-      "count": 8
-    },
-    {
-      "id": "not_sending_money",
-      "name": "Not Sending Money", 
-      "count": 8
-    },
-    {
-      "id": "school",
-      "name": "School Excuses",
-      "count": 8
-    }
+    "late_for_work",
+    "not_sending_money", 
+    "school",
+    "meeting",
+    "gym",
+    "cant_go_to_work",
+    "cant_send_money",
+    "cant_do_homework",
+    "cant_attend_meeting",
+    "cant_go_to_party",
+    "cant_go_to_gym",
+    "cant_play_games",
+    "developer"
   ]
 }`}
               </pre>
@@ -96,11 +105,7 @@ const DocsPage: React.FC = () => {
             <div className="bg-gray-900 rounded-xl p-4 overflow-x-auto">
               <pre className="text-blue-400 text-sm">
 {`{
-  "success": true,
-  "category": "late_for_work",
-  "excuse": "My alarm clock was hacked by cyber criminals!",
-  "id": "lfw_001",
-  "timestamp": "2024-01-15T10:30:00Z"
+  "excuse": "My cat was having an existential crisis and needed emotional support"
 }`}
               </pre>
             </div>
@@ -122,42 +127,74 @@ const DocsPage: React.FC = () => {
             <div className="bg-gray-900 rounded-xl p-4 overflow-x-auto">
               <pre className="text-purple-400 text-sm">
 {`{
-  "success": true,
   "category": "school",
-  "total": 8,
   "excuses": [
-    "My homework was eaten by a goat!",
-    "I got lost in the library!",
-    "My textbook joined the circus!",
-    "..."
-  ]
+    "My homework was eaten by a very literate goat who's now smarter than me",
+    "I got lost in the library and lived there for three days surviving on bookmarks",
+    "My textbook ran away to join the circus as a trapeze artist"
+  ],
+  "count": 3
 }`}
               </pre>
             </div>
           </div>
+
+          {/* Health Check */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+              <h3 className="text-xl font-semibold text-gray-900">Health Check</h3>
+            </div>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+              <code className="text-gray-800 font-mono">/health</code>
+            </div>
+            
+            <p className="text-gray-600 mb-4">Check if the API is running and healthy.</p>
+          </div>
         </div>
 
-        {/* Rate Limits */}
+        {/* Available Categories */}
         <div className="mt-16 p-8 bg-gray-50 border border-gray-200 rounded-2xl">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Rate Limits</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Categories</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-white rounded-xl border border-gray-200">
-              <div className="text-2xl font-bold text-gray-900 mb-2">100</div>
-              <div className="text-gray-600">requests/hour</div>
-              <div className="text-sm text-gray-500 mt-2">Free Tier</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-white rounded-xl border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-2">Work & Professional</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• late_for_work</li>
+                <li>• cant_go_to_work</li>
+                <li>• meeting</li>
+                <li>• cant_attend_meeting</li>
+              </ul>
             </div>
             
-            <div className="text-center p-6 bg-white rounded-xl border border-gray-200">
-              <div className="text-2xl font-bold text-gray-900 mb-2">1,000</div>
-              <div className="text-gray-600">requests/hour</div>
-              <div className="text-sm text-gray-500 mt-2">Pro Tier</div>
+            <div className="p-4 bg-white rounded-xl border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-2">Personal & Social</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• not_sending_money</li>
+                <li>• cant_send_money</li>
+                <li>• cant_go_to_party</li>
+                <li>• cant_go_to_gym</li>
+              </ul>
             </div>
             
-            <div className="text-center p-6 bg-white rounded-xl border border-gray-200">
-              <div className="text-2xl font-bold text-gray-900 mb-2">∞</div>
-              <div className="text-gray-600">requests/hour</div>
-              <div className="text-sm text-gray-500 mt-2">Enterprise</div>
+            <div className="p-4 bg-white rounded-xl border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-2">Education & Hobbies</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• school</li>
+                <li>• cant_do_homework</li>
+                <li>• cant_play_games</li>
+                <li>• developer</li>
+              </ul>
+            </div>
+            
+            <div className="p-4 bg-white rounded-xl border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-2">Health & Fitness</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• gym</li>
+                <li>• cant_go_to_gym</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -166,24 +203,29 @@ const DocsPage: React.FC = () => {
         <div className="mt-16 text-center p-12 bg-yellow-50 border border-yellow-200 rounded-2xl">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to get started?</h2>
           <p className="text-gray-600 mb-8">
-            Join thousands of developers using our Excuse API in their applications.
+            The Late Again API is free to use and doesn't require authentication.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="https://github.com/meetsik/excuse-generator"
+              href="https://late-again-api.onrender.com/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+            >
+              <ExternalLink size={18} />
+              View Full API Docs
+            </a>
+            
+            <a
+              href="https://github.com/meetsik24/Late-Again-UI"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
             >
               <Code size={18} />
               View Source Code
-              <ExternalLink size={16} />
             </a>
-            
-            <button className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-medium hover:bg-yellow-600 transition-colors">
-              Get API Key
-            </button>
           </div>
         </div>
       </div>

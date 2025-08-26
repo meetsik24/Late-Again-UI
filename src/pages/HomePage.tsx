@@ -1,22 +1,85 @@
-import React, { useState } from 'react';
-import { excuses, categories } from '../data/excuses';
+import React, { useState, useEffect } from 'react';
+import { ExcuseAPI } from '../services/api';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
+interface Category {
+  value: string;
+  label: string;
+}
+
 const HomePage: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('late_for_work');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [currentExcuse, setCurrentExcuse] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const generateExcuse = () => {
-    setIsGenerating(true);
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoryValues = await ExcuseAPI.getCategories();
+        const categoryObjects = categoryValues.map(cat => ({
+          value: cat,
+          label: ExcuseAPI.getCategoryLabel(cat)
+        }));
+        setCategories(categoryObjects);
+        if (categoryObjects.length > 0) {
+          setSelectedCategory(categoryObjects[0].value);
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        // Fallback to default categories
+        const fallbackCategories = [
+          { value: 'late_for_work', label: 'Late for Work' },
+          { value: 'not_sending_money', label: 'Not Sending Money' },
+          { value: 'school', label: 'School Excuses' }
+        ];
+        setCategories(fallbackCategories);
+        setSelectedCategory('late_for_work');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  const generateExcuse = async () => {
+    if (!selectedCategory) return;
     
-    setTimeout(() => {
-      const categoryExcuses = excuses[selectedCategory as keyof typeof excuses];
-      const randomIndex = Math.floor(Math.random() * categoryExcuses.length);
-      setCurrentExcuse(categoryExcuses[randomIndex]);
+    setIsGenerating(true);
+    setCurrentExcuse('');
+    
+    try {
+      const excuse = await ExcuseAPI.getRandomExcuse(selectedCategory);
+      if (excuse) {
+        setCurrentExcuse(excuse);
+      } else {
+        // Fallback: get all excuses and pick random one
+        const excuses = await ExcuseAPI.getExcuses(selectedCategory);
+        if (excuses.length > 0) {
+          const randomIndex = Math.floor(Math.random() * excuses.length);
+          setCurrentExcuse(excuses[randomIndex]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate excuse:', error);
+      setCurrentExcuse('Sorry, I ran out of excuses! Please try again later.');
+    } finally {
       setIsGenerating(false);
-    }, 500);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading excuses...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -36,7 +99,7 @@ const HomePage: React.FC = () => {
           
           <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
             Generate hilarious and creative excuses for any situation. 
-            Perfect for when you need a laugh or a clever way out.
+            Powered by the Late Again API with real-time excuse generation.
           </p>
         </div>
 
@@ -67,7 +130,7 @@ const HomePage: React.FC = () => {
 
             <button
               onClick={generateExcuse}
-              disabled={isGenerating}
+              disabled={isGenerating || !selectedCategory}
               className="w-full bg-gray-900 text-white py-4 px-6 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isGenerating ? (
@@ -104,15 +167,15 @@ const HomePage: React.FC = () => {
               <span className="text-2xl">🎯</span>
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Multiple Categories</h3>
-            <p className="text-gray-600 text-sm">Choose from work, money, or school excuses</p>
+            <p className="text-gray-600 text-sm">Choose from {categories.length} different excuse categories</p>
           </div>
           
           <div className="text-center">
             <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">⚡</span>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Instant Generation</h3>
-            <p className="text-gray-600 text-sm">Get creative excuses in seconds</p>
+            <h3 className="font-semibold text-gray-900 mb-2">Real-time API</h3>
+            <p className="text-gray-600 text-sm">Powered by the Late Again API for fresh excuses</p>
           </div>
           
           <div className="text-center">
