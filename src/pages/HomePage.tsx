@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LateAgainAPIs } from '../services/api';
-import { Sparkles, ArrowRight, ChevronDown, Copy, Check } from 'lucide-react';
+import { Sparkles, ArrowRight, ChevronDown, Copy, Check, Share2, Download, Link, Twitter, Facebook, Instagram } from 'lucide-react';
 
 interface Category {
   value: string;
@@ -15,6 +15,8 @@ const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const excuseRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -46,12 +48,32 @@ const HomePage: React.FC = () => {
     loadCategories();
   }, []);
 
+  // Handle incoming shareable links
+  useEffect(() => {
+    if (categories.length > 0 && !isLoading) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedExcuse = urlParams.get('excuse');
+      const sharedCategory = urlParams.get('category');
+      
+      if (sharedExcuse && sharedCategory) {
+        // Decode the excuse
+        const decodedExcuse = decodeURIComponent(sharedExcuse);
+        setCurrentExcuse(decodedExcuse);
+        setSelectedCategory(sharedCategory);
+        
+        // Clear the URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [categories, isLoading]);
+
   const generateExcuse = async () => {
     if (!selectedCategory) return;
     
     setIsGenerating(true);
     setCurrentExcuse('');
     setCopied(false);
+    setShowShareOptions(false);
     
     try {
       // First try to get a random excuse
@@ -87,6 +109,90 @@ const HomePage: React.FC = () => {
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy text:', error);
+    }
+  };
+
+  const generatePNG = async () => {
+    if (!excuseRef.current) return;
+    
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      
+      // Make sure the div is visible for rendering
+      const tempDiv = excuseRef.current.cloneNode(true) as HTMLElement;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.visibility = 'visible';
+      tempDiv.style.display = 'block';
+      document.body.appendChild(tempDiv);
+      
+      const canvas = await html2canvas(tempDiv, {
+        background: '#fefce8',
+        width: 600,
+        height: 400,
+        useCORS: true,
+        allowTaint: true
+      });
+      
+      // Clean up
+      document.body.removeChild(tempDiv);
+      
+      const link = document.createElement('a');
+      link.download = `excuse-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (error) {
+      console.error('Failed to generate PNG:', error);
+    }
+  };
+
+  const generateShareableLink = () => {
+    try {
+      const shareableData = {
+        excuse: currentExcuse,
+        category: selectedCategory,
+        timestamp: Date.now()
+      };
+      
+      // Create a more robust shareable link
+      const params = new URLSearchParams();
+      params.set('excuse', encodeURIComponent(currentExcuse));
+      params.set('category', selectedCategory);
+      params.set('t', Date.now().toString());
+      
+      const shareableLink = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+      
+      navigator.clipboard.writeText(shareableLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to generate shareable link:', error);
+    }
+  };
+
+  const shareToSocialMedia = (platform: string) => {
+    const text = `Check out this creative excuse: "${currentExcuse}"`;
+    const url = window.location.origin;
+    
+    let shareUrl = '';
+    switch (platform) {
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+        break;
+      case 'instagram':
+        // Instagram doesn't support direct sharing via URL, so we'll copy to clipboard
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
     }
   };
 
@@ -198,23 +304,113 @@ const HomePage: React.FC = () => {
                   "{currentExcuse}"
                 </p>
                 
-                {/* Copy Button */}
-                <button
-                  onClick={copyToClipboard}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-yellow-300 text-yellow-700 rounded-lg font-medium hover:bg-yellow-50 transition-colors"
-                >
-                  {copied ? (
-                    <>
-                      <Check size={16} className="text-green-600" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={16} />
-                      Copy Excuse
-                    </>
-                  )}
-                </button>
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3 justify-center mb-4">
+                  {/* Copy Button */}
+                  <button
+                    onClick={copyToClipboard}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-yellow-300 text-yellow-700 rounded-lg font-medium hover:bg-yellow-50 transition-colors"
+                  >
+                    {copied ? (
+                      <>
+                        <Check size={16} className="text-green-600" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={16} />
+                        Copy
+                      </>
+                    )}
+                  </button>
+
+                  {/* Share Button */}
+                  <button
+                    onClick={() => setShowShareOptions(!showShareOptions)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors"
+                  >
+                    <Share2 size={16} />
+                    Share
+                  </button>
+
+                  {/* Download PNG Button */}
+                  <button
+                    onClick={generatePNG}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                  >
+                    <Download size={16} />
+                    PNG
+                  </button>
+
+                  {/* Generate Link Button */}
+                  <button
+                    onClick={generateShareableLink}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                  >
+                    <Link size={16} />
+                    Link
+                  </button>
+                </div>
+
+                {/* Share Options */}
+                {showShareOptions && (
+                  <div className="mt-4 p-4 bg-white rounded-xl border border-yellow-200">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Share on Social Media</h4>
+                    <div className="flex gap-3 justify-center">
+                      <button
+                        onClick={() => shareToSocialMedia('twitter')}
+                        className="p-3 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors"
+                        title="Share on Twitter"
+                      >
+                        <Twitter size={20} />
+                      </button>
+                      <button
+                        onClick={() => shareToSocialMedia('facebook')}
+                        className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        title="Share on Facebook"
+                      >
+                        <Facebook size={20} />
+                      </button>
+                      <button
+                        onClick={() => shareToSocialMedia('instagram')}
+                        className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors"
+                        title="Copy for Instagram"
+                      >
+                        <Instagram size={20} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Hidden div for PNG generation */}
+          {currentExcuse && (
+            <div 
+              ref={excuseRef}
+              className="hidden absolute left-[-9999px] top-[-9999px] w-[600px] h-[400px] bg-yellow-50 p-8 flex items-center justify-center border-2 border-yellow-200 rounded-2xl"
+              style={{
+                position: 'absolute',
+                left: '-9999px',
+                top: '-9999px',
+                width: '600px',
+                height: '400px',
+                backgroundColor: '#fefce8',
+                padding: '2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid #fde68a',
+                borderRadius: '1rem'
+              }}
+            >
+              <div className="text-center">
+                <div className="text-4xl mb-4">💬</div>
+                <p className="text-2xl text-gray-800 leading-relaxed font-medium mb-4 text-center">
+                  "{currentExcuse}"
+                </p>
+                <p className="text-sm text-gray-500">Generated by Late Again</p>
               </div>
             </div>
           )}
